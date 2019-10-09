@@ -3,8 +3,8 @@ from PyQt5.QtCore import (Qt, QThreadPool)
 from PyQt5.QtGui import QIcon
 from os.path import basename
 import sys
-from scheduler import *
-from crud import *
+from Scheduler.cron import *
+from Scheduler.crud import *
 
 
 class CustomTextBox(QLineEdit):
