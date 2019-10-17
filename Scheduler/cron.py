@@ -1,8 +1,10 @@
-from shutil import copyfile
+from shutil import copy
 import datetime
 from PyQt5.QtCore import (QRunnable, QObject, pyqtSignal)
+from pathlib import Path
 import schedule
 import time
+import sys
 
 
 # Create a thread that schedule and copy the files present in the config.ini
@@ -16,6 +18,7 @@ class Worker(QRunnable):
         self.files = files
         self._signal_helper = SignalHelper()
         self.raise_error = self._signal_helper.raise_error
+        self.remove_files = self._signal_helper.remove_files
         self.args = args
         self.kwargs = kwargs
 
@@ -25,15 +28,30 @@ class Worker(QRunnable):
 
         while 1:
             schedule.run_pending()
+            self.check_path()
             time.sleep(1)
 
+    def check_path(self):
+        bad_files = []
+        for option in self.files['PATH']:
+            file = Path(self.files['PATH'][option])
+            # Check if the file path exist
+            if not file.is_file():
+                bad_files.append(option)
+        if bad_files:
+            self.remove_files.emit(bad_files)
+
     def copy(self):
-        now = datetime.datetime.today().strftime("%d-%b | %H:%M")
-        date = "/[" + now + "]"
+        now = datetime.datetime.today().strftime("%d-%b %H:%M")
+        if sys.platform == "linux":
+            date = "/[" + now + "]"
+        elif sys.platform == "win32":
+            date = "\[" + now + "]"
+
         if self.files['SAVE_PATH']['dir']:
             try:
                 for option in self.files['PATH']:
-                    copyfile(self.files['PATH'][option], self.files['SAVE_PATH']["dir"] + date + option)
+                    copy(self.files['PATH'][option], self.files['SAVE_PATH']["dir"] + date + option)
             except IOError:
                 self.raise_error.emit(self.ERROR_GENERIC)
         else:
@@ -44,3 +62,4 @@ class Worker(QRunnable):
 # Signals problem: with QRunnable i couldn't pass signals so i had to create an obj and connect through this
 class SignalHelper(QObject):
     raise_error = pyqtSignal(object)
+    remove_files = pyqtSignal(object)

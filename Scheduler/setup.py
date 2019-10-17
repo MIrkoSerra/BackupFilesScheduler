@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import (Qt, QThreadPool)
 from PyQt5.QtGui import QIcon
+import traceback
 from os.path import basename
-import sys
 from Scheduler.cron import *
 from Scheduler.crud import *
 
@@ -125,30 +125,36 @@ class App(QWidget):
         self.crud.write_config_file(self.files)
         return self.textbox_path.insert(folder)
 
-    def remove_files(self):
-        file = []
-        for option in self.files['PATH']:
-            file.append(option)
+    def remove_files(self, *args):
+        if not args:
+            file = []
+            for option in self.files['PATH']:
+                file.append(option)
 
-        file, ok = QInputDialog.getItem(self, "Remove File", "Select file:", file, 0, False)
+            file, ok = QInputDialog.getItem(self, "Remove File", "Select file:", file, 0, False)
 
-        if ok and file:
-            self.files.remove_option('PATH', file)
+            if ok and file:
+                self.files.remove_option('PATH', file)
+                self.crud.write_config_file(self.files)
+        else:
+            for option in args[0]:
+                self.files.remove_option('PATH', option)
             self.crud.write_config_file(self.files)
         return self.get_table_rows(self.table_widget)
 
     def cron(self):
         worker = Worker(self.files)
         worker.raise_error.connect(self.raise_error)
+        worker.remove_files.connect(self.remove_files)
         self.threadpool.start(worker)
 
     def raise_error(self, error):
         if error == 000:
+            a = traceback.format_exc()
             QMessageBox.warning(self, 'PATH Error!',
                                 "You have to insert a destination path for your files", QMessageBox.Ok)
         elif error == 100:
-            QMessageBox.warning(self, 'Generic Error',
-                                "Something went wrong!", QMessageBox.Ok)
+            QMessageBox.warning(self, 'Generic Error', traceback.format_exc(), QMessageBox.Ok)
 
 
 if __name__ == '__main__':
