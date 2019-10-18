@@ -2,9 +2,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import (Qt, QThreadPool)
 from PyQt5.QtGui import QIcon
 import traceback
+import qdarkstyle
 from os.path import basename
-from Scheduler.cron import *
-from Scheduler.crud import *
+from cron import *
+from crud import *
 
 
 class CustomTextBox(QLineEdit):
@@ -74,7 +75,8 @@ class App(QWidget):
         path_dir = self.files['SAVE_PATH']['dir']
         if path_dir:
             self.textbox_path.insert(path_dir)
-
+        self.label_timer = QLabel()
+        box_buttons.addWidget(self.label_timer, alignment=Qt.AlignLeft)
         box_buttons.addWidget(textbox, alignment=Qt.AlignRight)
         box1.addLayout(box_commands)
         return box1
@@ -126,7 +128,7 @@ class App(QWidget):
         return self.textbox_path.insert(folder)
 
     def remove_files(self, *args):
-        if not args:
+        if not args[0]:
             file = []
             for option in self.files['PATH']:
                 file.append(option)
@@ -146,7 +148,11 @@ class App(QWidget):
         worker = Worker(self.files)
         worker.raise_error.connect(self.raise_error)
         worker.remove_files.connect(self.remove_files)
+        worker.counter.connect(self.counter)
         self.threadpool.start(worker)
+
+    def counter(self, timer):
+        self.label_timer.setText(str(timer))
 
     def raise_error(self, error):
         if error == 000:
@@ -160,5 +166,5 @@ class App(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
-    app.setStyle('GTK+')
+    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     sys.exit(app.exec_())
