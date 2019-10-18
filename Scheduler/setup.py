@@ -68,7 +68,7 @@ class App(QWidget):
 
         # Save Path TextBox
         textbox = CustomTextBox()
-        textbox.clicked.connect(self.add_path)
+        textbox.clicked.connect(self.add_save_path)
         textbox.setReadOnly(True)
         textbox.setMinimumWidth(250)
         self.textbox_path = textbox
@@ -118,14 +118,15 @@ class App(QWidget):
         self.crud.write_config_file(self.files)
         return self.get_table_rows(self.table_widget)
 
-    def add_path(self):
+    def add_save_path(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         folder = QFileDialog.getExistingDirectory(self, "Select Folder", options=options)
         if folder:
             self.files.set('SAVE_PATH', "dir", folder)
-        self.crud.write_config_file(self.files)
-        return self.textbox_path.insert(folder)
+            self.crud.write_config_file(self.files)
+            self.textbox_path.clear()
+            return self.textbox_path.insert(folder)
 
     def remove_files(self, *args):
         if not args[0]:
