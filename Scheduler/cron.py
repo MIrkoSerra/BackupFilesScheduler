@@ -10,8 +10,9 @@ import sys
 # Create a thread that schedule and copy the files present in the config.ini
 # The thread has as parameter, the configparser obj, loaded by the gui (self.files)
 class Worker(QRunnable):
-    ERROR_NO_DIRECTORY = 000
-    ERROR_GENERIC = 100
+    ERROR_NO_DIRECTORY = 100
+    ERROR_WRONG_DIRECTORY = 200
+    ERROR_GENERIC = 300
 
     def __init__(self, files, *args, **kwargs):
         super(Worker, self).__init__()
@@ -35,7 +36,8 @@ class Worker(QRunnable):
             self.counter.emit(timer)
             time.sleep(1)
 
-    def timer(self, waiting_time, timer):
+    @staticmethod
+    def timer(waiting_time, timer):
         if timer == 0:
             timer = (waiting_time * 60) - 1
             return timer
@@ -53,18 +55,22 @@ class Worker(QRunnable):
             self.remove_files.emit(bad_files)
 
     def copy(self):
-        now = datetime.datetime.today().strftime("%d-%b %H:%M")
+        now = datetime.datetime.today().strftime("%H:%M")
         if sys.platform == "linux":
             date = "/[" + now + "]"
         elif sys.platform == "win32":
             date = "\[" + now + "]"
 
-        if self.files['SAVE_PATH']['dir']:
+        if not Path(self.files['SAVE_PATH']['dir']).is_dir():
+            self.raise_error.emit(self.ERROR_WRONG_DIRECTORY)
+
+        elif self.files['SAVE_PATH']['dir']:
             try:
                 for option in self.files['PATH']:
                     copy(self.files['PATH'][option], self.files['SAVE_PATH']["dir"] + date + option)
             except IOError:
                 self.raise_error.emit(self.ERROR_GENERIC)
+
         else:
             self.raise_error.emit(self.ERROR_NO_DIRECTORY)
 

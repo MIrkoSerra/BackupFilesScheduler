@@ -155,11 +155,14 @@ class App(QWidget):
         self.label_timer.setText(str(timer))
 
     def raise_error(self, error):
-        if error == 000:
-            a = traceback.format_exc()
+        if error == 100:
             QMessageBox.warning(self, 'PATH Error!',
                                 "You have to insert a destination path for your files", QMessageBox.Ok)
-        elif error == 100:
+
+        elif error == 200:
+            QMessageBox.warning(self, 'PATH Error', "Your destination path doesn't exist", QMessageBox.Ok)
+
+        elif error == 300:
             QMessageBox.warning(self, 'Generic Error', traceback.format_exc(), QMessageBox.Ok)
 
 
