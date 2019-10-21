@@ -30,25 +30,37 @@ class App(QWidget):
         self.left = 10
         self.top = 10
         self.width = 600
-        self.height = 262
+        self.height = 320
         self.init_ui()
         self.cron()
 
     def init_ui(self):
-
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        mainbox = QVBoxLayout()
-        mainbox.addLayout(self.box1(), 1)
-        self.setLayout(mainbox)
+
+        self.layout = QVBoxLayout(self)
+
+        self.tabs = QTabWidget()
+        tab1 = QWidget()
+        tab2 = QWidget()
+
+        self.tabs.addTab(tab1, "Local")
+        self.tabs.addTab(tab2, "Drive")
+
+        tab1.layout = QVBoxLayout()
+        tab1.layout.addLayout(self.local_tab(), 1)
+        tab1.setLayout(tab1.layout)
+
+        self.layout.addWidget(self.tabs)
+        self.setLayout(self.layout)
         self.show()
 
-    def box1(self):
-        box1 = QVBoxLayout()
+    def local_tab(self):
+        main_box = QVBoxLayout()
         table = self.create_table()
         label_1 = QLabel('Files to backup')
-        box1.addWidget(label_1, alignment=Qt.AlignBottom)
-        box1.addWidget(table)
+        main_box.addWidget(label_1, alignment=Qt.AlignBottom)
+        main_box.addWidget(table)
 
         box_buttons = QHBoxLayout()
         # Add file to backup
@@ -78,8 +90,8 @@ class App(QWidget):
         self.label_timer = QLabel()
         box_buttons.addWidget(self.label_timer, alignment=Qt.AlignLeft)
         box_buttons.addWidget(textbox, alignment=Qt.AlignRight)
-        box1.addLayout(box_commands)
-        return box1
+        main_box.addLayout(box_commands)
+        return main_box
 
     def create_table(self):
         # Create table
