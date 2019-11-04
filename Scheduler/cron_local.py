@@ -9,13 +9,13 @@ import sys
 
 # Create a thread that schedule and copy the files present in the config.ini
 # The thread has as parameter, the configparser obj, loaded by the gui (self.files)
-class Worker(QRunnable):
+class LocalWorker(QRunnable):
     ERROR_NO_DIRECTORY = 100
     ERROR_WRONG_DIRECTORY = 200
     ERROR_GENERIC = 300
 
     def __init__(self, files, *args, **kwargs):
-        super(Worker, self).__init__()
+        super(LocalWorker, self).__init__()
         self.files = files
         self._signal_helper = SignalHelper()
         self.raise_error = self._signal_helper.raise_error
@@ -25,7 +25,7 @@ class Worker(QRunnable):
         self.kwargs = kwargs
 
     def run(self):
-        waiting_time = int(self.files['TIMER']['default'])
+        waiting_time = int(self.files['TIMER']['local'])
         schedule.every(waiting_time).minutes.do(self.copy)
         timer = 0
 
@@ -57,27 +57,29 @@ class Worker(QRunnable):
     def copy(self):
         now = datetime.datetime.today().strftime("%H:%M")
         if sys.platform == "linux":
-            date = "/[" + now + "]"
+            date = "/" + now + ""
         elif sys.platform == "win32":
-            date = "\[" + now + "]"
+            date = "\\" + now + "]"
 
-        if not Path(self.files['SAVE_PATH']['dir']).is_dir():
-            self.raise_error.emit(self.ERROR_WRONG_DIRECTORY)
+        if self.files.options('PATH'):
+            if not Path(self.files['SAVE_PATH']['dir']).is_dir():
+                self.raise_error.emit(self.ERROR_WRONG_DIRECTORY)
 
-        elif self.files['SAVE_PATH']['dir']:
-            try:
-                for option in self.files['PATH']:
-                    copy(self.files['PATH'][option], self.files['SAVE_PATH']["dir"] + date + option)
-            except IOError:
-                self.raise_error.emit(self.ERROR_GENERIC)
+            elif self.files['SAVE_PATH']['dir']:
+                try:
+                    for option in self.files['PATH']:
+                        copy(self.files['PATH'][option], self.files['SAVE_PATH']["dir"] + date + option)
+                except IOError:
+                    self.raise_error.emit(self.ERROR_GENERIC)
 
-        else:
-            self.raise_error.emit(self.ERROR_NO_DIRECTORY)
+            else:
+                self.raise_error.emit(self.ERROR_NO_DIRECTORY)
 
 
 # To handle the signal problem (source https://pastebin.com/npnwenyw)
 # Signals problem: with QRunnable i couldn't pass signals so i had to create an obj and connect through this
 class SignalHelper(QObject):
+    # LocalWorker
     raise_error = pyqtSignal(object)
     remove_files = pyqtSignal(object)
     counter = pyqtSignal(object)

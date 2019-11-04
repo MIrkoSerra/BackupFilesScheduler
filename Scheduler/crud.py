@@ -5,7 +5,7 @@ class Crud:
 
     def __init__(self):
         # https://stackoverflow.com/questions/576169/understanding-python-super-with-init-methods
-        super().__init__()
+        super(Crud, self).__init__()
         self.config_parser = configparser.ConfigParser()
 
     def init_config(self):
@@ -18,11 +18,23 @@ class Crud:
     @staticmethod
     def create_config_file(config_parser):
         config_parser["PATH"] = {}
+        config_parser["PATH_DRIVE"] = {}
         config_parser["SAVE_PATH"] = {
             'dir': ""
         }
         config_parser["TIMER"] = {
-            'default': '1',
+            'local': '1',
+            'drive': '5',
+        }
+        config_parser["GDRIVE"] = {
+            'access_token': "",
+            'client_id': "",
+            'client_secret': "",
+            'refresh_token': "",
+            'token_expiry': "",
+            'token_uri': "",
+            'user_agent': "",
+            'revoke_uri': "",
         }
 
         return config_parser
